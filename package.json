@@ -1,0 +1,11 @@
+{
+  "name": "notes-index",
+  "version": "0.0.1",
+  "type": "module",
+  "description": "Builds an index of a folder of Markdown notes. Throwaway test project.",
+  "bin": { "notes-index": "src/cli.js" },
+  "scripts": {
+    "test": "node --test"
+  },
+  "license": "MIT"
+}
