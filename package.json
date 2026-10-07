@@ -3,7 +3,7 @@
   "version": "0.0.1",
   "type": "module",
   "description": "Builds an index of a folder of Markdown notes. Throwaway test project.",
-  "bin": { "notes-index": "src/cli.js" },
+  "bin": { "notes-index": "src/cli.js", "notes-search": "src/search-cli.js" },
   "scripts": {
     "test": "node --test"
   },
