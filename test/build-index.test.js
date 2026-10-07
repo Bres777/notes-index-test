@@ -140,3 +140,51 @@ test('an empty folder gives an empty index rather than an error', () => {
 test('throws when the folder does not exist', () => {
   assert.throws(() => buildIndex(join(tmp, 'no-such-folder')), { code: 'ENOENT' });
 });
+
+// --- wordIndex (stage 2) ---
+
+test('sample notes: wordIndex maps each word to the notes containing it', () => {
+  const { wordIndex } = buildIndex(samples);
+  assert.deepEqual(wordIndex.welcome, ['journal/2026-10-01.md', 'project-plan.md', 'welcome.md']);
+  assert.deepEqual(wordIndex.plan, ['journal/2026-10-01.md', 'project-plan.md', 'scratch.md', 'welcome.md']);
+  assert.deepEqual(wordIndex.title, ['journal/archive/old-ideas.md', 'scratch.md']);
+});
+
+test('sample notes: words come from titles, tags, links, numbers and code blocks alike', () => {
+  const { wordIndex } = buildIndex(samples);
+  assert.deepEqual(wordIndex.reading, ['reading-list.md', 'welcome.md']);
+  assert.deepEqual(wordIndex['2025'], ['journal/archive/old-ideas.md']);
+  assert.deepEqual(wordIndex['2027'], ['project-plan.md']);
+  assert.deepEqual(wordIndex['42'], ['reading-list.md']);
+  assert.deepEqual(wordIndex.notatag, ['reading-list.md']);
+});
+
+// JavaScript itself puts keys that are whole numbers first, in number order, whatever order they were added in.
+// So "sorted" holds for the keys that are not whole numbers; the whole numbers come before them, smallest first.
+test('sample notes: wordIndex keys are lower-case and in a fixed order, and every path in it is a note', () => {
+  const index = buildIndex(samples);
+  const words = Object.keys(index.wordIndex);
+  const paths = new Set(index.notes.map((note) => note.path));
+  const isWholeNumber = (word) => /^(0|[1-9]\d*)$/.test(word);
+  const numbers = words.filter(isWholeNumber);
+  const others = words.filter((word) => !isWholeNumber(word));
+  assert.deepEqual(numbers, ['2', '42', '2025', '2027']);
+  assert.deepEqual(words, [...numbers, ...others]);
+  assert.deepEqual(others, [...others].sort((a, b) => (a < b ? -1 : a > b ? 1 : 0)));
+  assert.deepEqual(words, words.map((word) => word.toLowerCase()));
+  for (const word of words) {
+    assert.ok(index.wordIndex[word].length > 0);
+    assert.ok(index.wordIndex[word].every((path) => paths.has(path)));
+    assert.equal(new Set(index.wordIndex[word]).size, index.wordIndex[word].length);
+  }
+});
+
+test('words named like built-in object properties are kept as ordinary wordIndex keys', () => {
+  const reread = JSON.parse(JSON.stringify(buildIndex(join(tmp, 'awkward'))));
+  assert.deepEqual(Object.keys(reread.wordIndex), ['a', 'constructor', 'proto', 'same', 'title', 'tostring']);
+  assert.deepEqual(reread.wordIndex.constructor, ['a.md', 'b.md']);
+});
+
+test('an empty folder gives an empty wordIndex', () => {
+  assert.deepEqual(buildIndex(join(tmp, 'empty')).wordIndex, {});
+});

@@ -46,13 +46,20 @@ test('writes the index to --out and prints one line with the counts', () => {
   });
 });
 
-test('the written file has the five index fields and ends with a newline', () => {
+test('the written file has the six index fields and ends with a newline', () => {
   const out = join(tmp, 'fields.json');
   run(['sample-notes', '--out', out]);
 
   const text = readFileSync(out, 'utf8');
   assert.ok(text.endsWith('}\n'));
-  assert.deepEqual(Object.keys(JSON.parse(text)), ['generatedFrom', 'noteCount', 'notes', 'tags', 'backlinks']);
+  assert.deepEqual(Object.keys(JSON.parse(text)), [
+    'generatedFrom',
+    'noteCount',
+    'notes',
+    'tags',
+    'backlinks',
+    'wordIndex',
+  ]);
 });
 
 test('--out may come before the folder', () => {
