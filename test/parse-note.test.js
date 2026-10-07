@@ -51,6 +51,20 @@ test('title is found behind a byte-order mark and with Windows line endings', ()
   assert.deepEqual(parseNote('﻿# With BOM\r\nbody #tag\r\n', 'x.md').tags, ['tag']);
 });
 
+test('lines may end the Unix way, the Windows way or the old Mac way', () => {
+  for (const ending of ['\n', '\r\n', '\r']) {
+    const parsed = parseNote(['# Title', 'one #tag', 'two [[Link]]'].join(ending), 'x.md');
+    assert.deepEqual(parsed, { path: 'x.md', title: 'Title', tags: ['tag'], links: ['Link'], words: 4 });
+  }
+});
+
+test('an unclosed fenced code block runs to the end of the note', () => {
+  const parsed = note(['# Title', '```', '# not a heading', '#notatag [[Not A Link]]']);
+  assert.deepEqual(parsed.tags, []);
+  assert.deepEqual(parsed.links, []);
+  assert.equal(parsed.words, 7);
+});
+
 // --- tags ---
 
 test('tags are lower-cased, unique and sorted', () => {

@@ -2,7 +2,7 @@
 
 import { test, before, after } from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdirSync, writeFileSync, rmSync } from 'node:fs';
+import { mkdirSync, writeFileSync, rmSync, symlinkSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -68,6 +68,17 @@ test('a folder whose name ends in .md is walked, not listed as a note', () => {
   const found = scan(join(tmp, 'tree'));
   assert.ok(found.includes('looks-like-a-note.md/inside.md'));
   assert.equal(found.includes('looks-like-a-note.md'), false);
+});
+
+test('symbolic links and junctions are left out, so a loop of links cannot trap the scan', (t) => {
+  makeFile('links/real/a.md');
+  try {
+    symlinkSync(join(tmp, 'links'), join(tmp, 'links/real/back-to-top'), 'junction');
+  } catch {
+    t.skip('this system would not let the test create a link');
+    return;
+  }
+  assert.deepEqual(scan(join(tmp, 'links')), ['real/a.md']);
 });
 
 test('gives the same answer every time', () => {

@@ -34,11 +34,11 @@ function countWords(line) {
 }
 
 export function parseNote(text, path) {
-  const lines = text.replace(/^﻿/, '').split(/\r?\n/);
+  const lines = text.replace(/^﻿/, '').split(/\r\n|\r|\n/);
 
   let title = null;
   const tags = new Set();
-  const links = [];
+  const links = new Set();
   let words = 0;
   let insideFence = false;
 
@@ -72,7 +72,7 @@ export function parseNote(text, path) {
 
     for (const match of line.matchAll(WIKI_LINK)) {
       const target = linkTarget(match[1]);
-      if (target && !links.includes(target)) links.push(target);
+      if (target) links.add(target);
     }
   }
 
@@ -80,7 +80,7 @@ export function parseNote(text, path) {
     path,
     title: title ?? fileNameWithoutExtension(path),
     tags: [...tags].sort(),
-    links,
+    links: [...links],
     words,
   };
 }
